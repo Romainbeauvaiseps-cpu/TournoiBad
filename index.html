@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badminton Scolaire - Gestion de Tournoi</title>
+    <!-- Méta-tags pour PWA (iOS / Mobile) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tournoi Bad">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/badminton.png">
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- Icône générique par défaut -->
+    <style>
+        :root {
+            --primary: #4a90e2;
+            /* Bleu plus doux et moderne */
+            --primary-dark: #357abd;
+            --secondary: #5dade2;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --light: #f4f6f7;
+            --dark: #2c3e50;
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 30px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: var(--dark);
+            /* Image de fond */
+            background: url('background_badminton.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.95);
+            /* Légère transparence pour voir le fond */
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: var(--primary-dark);
+            text-align: center;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        h3 {
+            color: var(--dark);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        /* Menu Rows */
+        .menu-row {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .menu-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            min-height: 150px;
+            text-align: center;
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .menu-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
+        }
+
+        .menu-btn-sm {
+            min-height: 80px;
+            padding: 15px;
+            font-size: 1rem;
+            gap: 5px;
+        }
+
+        /* Standard Buttons */
+        button {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+            background: var(--primary-dark);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+            background: #27ae60;
+        }
+
+        .btn-retour {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .btn-retour:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Formulaires global */
+        input,
+        select {
+            padding: 15px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #e0e0e0;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 300;
+            font-size: 1rem;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 100%;
+            background-color: white;
+        }
+
+        /* Spécial pour les selects de la page de saisie pour qu'ils soient plus gros */
+        #saisie select,
+        #saisie-equipe select {
+            padding: 20px 25px;
+            font-size: 1.4rem;
+            font-weight: 400;
+            background-color: #fff;
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            color: var(--primary-dark);
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            background: #fafafa;
+            padding: 25px;
+            border-radius: var(--radius-md);
+            border: 1px solid #eee;
+        }
+
+        /* Score Inputs */
+        .score-input {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .digit-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spin-btn {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--primary);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            z-index: 2;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .spin-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .spin-btn:active {
+            transform: scale(0.9);
+        }
+
+        .score-input input[type="number"] {
+            width: 70px;
+            height: 70px;
+            padding: 0;
+            font-size: 1.8rem;
+            text-align: center;
+            border-radius: 50% !important;
+            font-weight: 700;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 1;
+            -moz-appearance: textfield;
+            appearance: textfield;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Conteneur pour mettre côte à côte Gagnant/Perdant */
+        #saisie .match-players-row,
+        #saisie-equipe .match-players-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: nowrap;
+            /* Forcer le côte à côte sur tablette/desktop */
+        }
+
+        #saisie .player-group,
+        #saisie-equipe .player-group {
+            flex: 1;
+            min-width: 0;
+            /* Permet de réduire sous la largeur du contenu si besoin */
+            max-width: 400px;
+        }
+
+        @media (max-width: 800px) {
+
+            #saisie .match-players-row,
+            #saisie-equipe .match-players-row {
+                flex-wrap: wrap;
+            }
+
+            #saisie .player-group,
+            #saisie-equipe .player-group {
+                max-width: 100%;
+            }
+        }
+
+        /* Cacher les flèches natives */
+        .score-input input[type="number"]::-webkit-outer-spin-button,
+        .score-input input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Couleurs Spécifiques re-appliquées sur les INPUTS directement via selecteur + précis ou inline */
+        /* On va utiliser des classes pour les couleurs pour simplifier le CSS complexe nth-child avec les wrappers */
+        .digit-m {
+            background-color: #d1e7dd;
+            /* Vert foncé pâle */
+            color: #0f5132;
+        }
+
+        .digit-c {
+            background-color: #e2f3e5;
+            /* Vert clair pâle */
+            color: #1e7e34;
+        }
+
+        .digit-d {
+            background-color: #fff3cd;
+            /* Jaune pâle */
+            color: #856404;
+        }
+
+        .digit-u {
+            background-color: #ffe5d0;
+            /* Orange pâle */
+            color: #c44d08;
+        }
+
+        /* Liste élèves et équipes */
+        #liste-eleves-boutons,
+        #liste-equipes-boutons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-eleve {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid transparent;
+            padding: 20px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            /* Assurer que le bouton remplit la grille */
+        }
+
+        .btn-eleve:hover {
+            background: white;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Tableaux */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 30px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        th,
+        td {
+            padding: 18px 25px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .alert {
+            padding: 25px;
+            background: #ffffff;
+            color: var(--dark);
+            border-radius: var(--radius-md);
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+            font-weight: 700;
+            font-size: 1.3rem;
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 0.4s ease;
+        }
+
+        .alert-success {
+            border-left: 8px solid var(--success);
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .alert-info {
+            border-left: 8px solid var(--primary);
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Modal / Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            animation: zoomIn 0.3s ease;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--danger);
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .modal-text {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: var(--dark);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #eee;
+            margin: 30px 0;
+        }
+
+        /* Helpers */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Indicateur de sauvegarde auto */
+        #auto-save-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Styles Fiche Élève */
+        .fiche-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            text-align: left;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .student-name {
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .student-rank {
+            background: var(--primary);
+            color: white;
+            padding: 15px 30px;
+            border-radius: var(--radius-md);
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .nom-cliquable {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .nom-cliquable:hover {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* --- STYLE PRO FICHE JOUEUR --- */
+        .pro-fiche-container {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: white;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .pro-hero {
+            background: linear-gradient(135deg, #1a1a1a 0%, #34495e 100%);
+            padding: 40px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pro-hero::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -10%;
+            width: 70%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.03);
+            transform: rotate(25deg);
+        }
+
+        .pro-name-container {
+            z-index: 1;
+        }
+
+        .pro-firstname {
+            font-size: 1.5rem;
+            text-transform: capitalize;
+            font-weight: 300;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .pro-lastname {
+            font-size: 3.5rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            margin: 0;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .pro-rank-box {
+            text-align: right;
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            padding-left: 30px;
+            z-index: 1;
+        }
+
+        .pro-rank-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.6;
+        }
+
+        .pro-rank-value {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #e74c3c;
+            line-height: 1;
+            margin-top: 5px;
+        }
+
+        .pro-stats-bar {
+            background: #2c3e50;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 20px 10px;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .pro-stat-item {
+            text-align: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pro-stat-item:last-child {
+            border-right: none;
+        }
+
+        .pro-stat-item .label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .pro-stat-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .pro-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .pro-detail-card {
+            background: white;
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+            text-align: center;
+        }
+
+        .pro-detail-card .label {
+            display: block;
+            font-size: 0.65rem;
+            color: #95a5a6;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .pro-detail-card .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .pro-history-section {
+            padding: 30px;
+        }
+
+        .pro-history-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            color: var(--dark);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pro-match-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+            border: 1px solid #eee;
+        }
+
+        .pro-match-result {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .pro-match-info {
+            flex-grow: 1;
+        }
+
+        .pro-match-score {
+            font-size: 1.2rem;
+            font-weight: 900;
+            margin-bottom: 2px;
+        }
+
+        .pro-match-adv {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        .pro-match-time {
+            font-size: 0.75rem;
+            color: #bdc3c7;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .pro-hero {
+                padding: 25px;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .pro-lastname {
+                font-size: 2.5rem;
+            }
+
+            .pro-rank-box {
+                border-left: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                padding-left: 0;
+                padding-top: 15px;
+                margin-top: 15px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .pro-stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .pro-stat-item {
+                border-right: none;
+            }
+        }
+
+        .container-transparent {
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+        }
+
+        .container-transparent #fiche-eleve,
+        .container-transparent #fiche-equipe {
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="auto-save-toast">💾 Sauvegarde auto...</div>
+
+    <!-- MODAL DE CONFIRMATION -->
+    <div id="modal-confirm" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">Attention</div>
+            <div class="modal-text" id="modal-text">Voulez-vous vraiment effectuer cette action ?</div>
+            <div class="modal-buttons">
+                <button class="btn-retour" style="margin:0" onclick="closeModal()">Annuler</button>
+                <button id="modal-btn-confirm" class="btn-success">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- PAGE CHOIX DU MODE (ACCUEIL PRINCIPAL) -->
+        <div id="choix-mode" class="page active">
+            <h1>🏸 Tournoi Badminton EPS</h1>
+            <h2>Choisissez votre mode de tournoi</h2>
+            <div class="menu-container" style="margin-top: 30px;">
+                <div class="menu-row">
+                    <button class="menu-btn" onclick="showPage('accueil')"
+                        style="min-height: 200px; font-size: 1.5rem;">
+                        👤 Tournoi simple
+                        <span style="font-size: 0.95rem; font-weight: normal; opacity: 0.85">1 joueur contre 1
+                            joueur</span>
+                    </button>
+                    <button class="menu-btn" onclick="showPage('accueil-equipe')"
+                        style="min-height: 200px; font-size: 1.5rem;">
+                        👥 Tournoi équipe
+                        <span style="font-size: 0.95rem; font-weight: normal; opacity: 0.85">Équipes de 2 joueurs (2
+                            contre 2)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div
+                style="text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #95a5a6; line-height: 1.4;">
+                Application créée par Romain Beauvais<br>
+                GEPEPS Versailles - Collège Léonard De Vinci - Eragny sur Oise
+            </div>
+        </div>
+
+        <!-- PAGE ACCUEIL (MENU TOURNOI SIMPLE) -->
+        <div id="accueil" class="page">
+            <button class="btn-retour" onclick="showPage('choix-mode')">⬅ Retour à l'accueil</button>
+            <h1>👤 Tournoi Simple</h1>
+            <div class="menu-container" style="margin-top: 20px;">
+                <!-- Ligne 1 : Inscription & Liste -->
+                <div class="menu-row">
+                    <button class="menu-btn" onclick="showPage('inscription')">
+                        ➕ Inscrire les élèves
+                    </button>
+                    <button class="menu-btn" onclick="showPage('liste-eleves')">
+                        👥 Liste des élèves
+                        <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.8">(Accès fiches)</span>
+                    </button>
+                </div>
+
+                <!-- Ligne 2 : Résultats & Classement -->
+                <div class="menu-row">
+                    <button class="menu-btn" onclick="showPage('saisie')">
+                        📝 Entrer les résultats
+                    </button>
+                    <button class="menu-btn" onclick="showPage('classement')">
+                        🏆 Classement
+                    </button>
+                </div>
+
+                <!-- Ligne 3 : Réglages & Réinitialiser (Taille réduite) -->
+                <div class="menu-row">
+                    <button class="menu-btn menu-btn-sm" onclick="showPage('settings')"
+                        style="border-color: #607d8b; color: #455a64;">
+                        ⚙️ Réglages
+                    </button>
+                    <button class="menu-btn menu-btn-sm" onclick="reinitialiserApp()"
+                        style="border-color: var(--danger); color: var(--danger);">
+                        �️ Réinitialiser
+                    </button>
+                </div>
+
+                <!-- Ligne 4 : Sauvegarde, Export, Import (Bas de page, taille réduite) -->
+                <div class="menu-row">
+                    <button class="menu-btn menu-btn-sm" onclick="telechargerDonnees()"
+                        style="border-color: #f39c12; color: #d35400;">
+                        � Sauvegarder
+                    </button>
+                    <button class="menu-btn menu-btn-sm" onclick="exporterClassementExcel()"
+                        style="border-color: #27ae60; color: #27ae60;">
+                        📊 Exporter
+                    </button>
+                    <button class="menu-btn menu-btn-sm" onclick="document.getElementById('jsonInput').click()"
+                        style="border-color: #8e44ad; color: #8e44ad;">
+                        📂 Importer
+                    </button>
+                </div>
+                <input type="file" id="jsonInput" accept=".json" style="display: none;"
+                    onchange="importerDonneesJSON()">
+            </div>
+
+            <div id="msg-sauvegarde" class="alert">✅ Données sauvegardées !</div>
+
+            <div
+                style="text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #95a5a6; line-height: 1.4;">
+                Application créée par Romain Beauvais<br>
+                GEPEPS Versailles - Collège Léonard De Vinci - Eragny sur Oise
+            </div>
+        </div>
+
+        <div id="settings" class="page">
+            <button class="btn-retour" onclick="showPage('accueil')">⬅ Retour au Menu</button>
+            <h2>⚙️ Réglages du Tournoi</h2>
+            <div class="form-group" style="display: flex; flex-direction: column; align-items: center;">
+                <div style="margin-bottom: 20px; width: 50%;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Points par Victoire :</label>
+                    <input type="number" id="set-victoire" min="0" value="10">
+                </div>
+                <div style="margin-bottom: 20px; width: 50%;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Points par Défaite :</label>
+                    <input type="number" id="set-defaite" min="0" value="5">
+                </div>
+                <div style="margin-bottom: 20px; width: 50%;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Points pour l'Arbitrage
+                        :</label>
+                    <input type="number" id="set-arbitre" min="0" value="2">
+                </div>
+                <div
+                    style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; background: #eef2f7; padding: 15px; border-radius: var(--radius-sm); width: 50%;">
+                    <input type="checkbox" id="set-bonus" style="width: auto;">
+                    <label for="set-bonus" style="font-weight: bold; cursor: pointer;">Activer le bonus de
+                        classement</label>
+                </div>
+                <p style="font-size: 0.85rem; color: #7f8c8d; font-style: italic; text-align: center;">
+                    Si activé, une victoire contre un adversaire mieux classé rapporte des points bonus (1 point par
+                    position d'écart).
+                </p>
+                <button class="btn-success" style="width: 80%; margin-top: 20px; padding: 25px; font-size: 1.5rem;"
+                    onclick="saveSettings()">Valider les
+                    Réglages</button>
+                <div id="msg-settings" class="alert alert-success">✅ Réglages enregistrés avec succès !</div>
+            </div>
+        </div>
+
+        <!-- PAGE INSCRIPTION -->
+        <div id="inscription" class="page">
+            <button class="btn-retour" onclick="showPage('accueil')">⬅ Retour au Menu</button>
+            <h2>Inscrire des Élèves</h2>
+            <div class="form-group">
+                <h3>Ajout Manuel</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="nom-eleve" placeholder="Nom Prénom">
+                    <button onclick="ajouterEleve()">Ajouter</button>
+                </div>
+                <hr>
+                <h3>Import CSV / Excel</h3>
+                <label style="display:block; margin-bottom: 10px;">Fichier avec une liste de noms (un par ligne)
+                    :</label>
+                <input type="file" id="csvFile" accept=".csv, .xls, .xlsx" onchange="importCSV()">
+            </div>
+            <div id="msg-ajout" class="alert alert-success">✅ Élève ajouté avec succès !</div>
+        </div>
+
+        <!-- PAGE LISTE ÉLÈVES -->
+        <div id="liste-eleves" class="page">
+            <button class="btn-retour" onclick="showPage('accueil')">⬅ Retour au Menu</button>
+            <h2>Fiches Élèves</h2>
+            <p style="text-align: center; color: #7f8c8d;">Cliquez sur un élève pour voir ses détails.</p>
+            <div id="liste-eleves-boutons"></div>
+        </div>
+
+        <!-- PAGE SAISIE -->
+        <div id="saisie" class="page">
+            <button class="btn-retour" onclick="showPage('accueil')">⬅ Retour au Menu</button>
+            <h2>Saisie du Match</h2>
+            <div class="match-players-row">
+                <div class="form-group player-group">
+                    <h3>🥇 Gagnant</h3>
+                    <select id="select-gagnant"></select>
+                    <div class="score-input">
+                        <!-- Milliers -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('g-m', 1)">▲</button>
+                            <input type="number" id="g-m" class="digit-m" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('g-m', -1)">▼</button>
+                        </div>
+                        <!-- Centaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('g-c', 1)">▲</button>
+                            <input type="number" id="g-c" class="digit-c" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('g-c', -1)">▼</button>
+                        </div>
+                        <!-- Dizaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('g-d', 1)">▲</button>
+                            <input type="number" id="g-d" class="digit-d" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('g-d', -1)">▼</button>
+                        </div>
+                        <!-- Unités -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('g-u', 1)">▲</button>
+                            <input type="number" id="g-u" class="digit-u" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('g-u', -1)">▼</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group player-group">
+                    <h3>🥈 Perdant</h3>
+                    <select id="select-perdant"></select>
+                    <div class="score-input">
+                        <!-- Milliers -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('p-m', 1)">▲</button>
+                            <input type="number" id="p-m" class="digit-m" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('p-m', -1)">▼</button>
+                        </div>
+                        <!-- Centaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('p-c', 1)">▲</button>
+                            <input type="number" id="p-c" class="digit-c" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('p-c', -1)">▼</button>
+                        </div>
+                        <!-- Dizaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('p-d', 1)">▲</button>
+                            <input type="number" id="p-d" class="digit-d" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('p-d', -1)">▼</button>
+                        </div>
+                        <!-- Unités -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('p-u', 1)">▲</button>
+                            <input type="number" id="p-u" class="digit-u" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('p-u', -1)">▼</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="width: 50%; margin-left: auto; margin-right: auto;">
+                <h3>⚖️ Arbitre</h3>
+                <select id="select-arbitre"></select>
+            </div>
+            <div style="text-align: center;">
+                <button class="btn-success" onclick="enregistrerMatch()">Valider le Match</button>
+                <div id="msg-confirm" class="alert alert-success">✅ Match enregistré avec succès !</div>
+            </div>
+        </div>
+
+        <!-- PAGE CLASSEMENT -->
+        <div id="classement" class="page">
+            <button class="btn-retour" onclick="showPage('accueil')">⬅ Retour au Menu</button>
+            <h2>Classement Général</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Nom</th>
+                        <th>Points</th>
+                        <th>Gagnés</th>
+                        <th>Perdus</th>
+                        <th>Arbitrés</th>
+                    </tr>
+                </thead>
+                <tbody id="body-classement"></tbody>
+            </table>
+        </div>
+
+        <!-- PAGE FICHE ÉLÈVE -->
+        <div id="fiche-eleve" class="page">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-retour" onclick="showPage('liste-eleves')" style="margin-bottom: 0;">⬅ Retour
+                    Liste</button>
+                <button class="btn-retour" onclick="showPage('classement')" style="margin-bottom: 0;">🏆 Retour
+                    Classement</button>
+            </div>
+            <div id="stats-detaillees" style="width: 100%;"></div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!--                 SECTION TOURNOI ÉQUIPE                    -->
+        <!-- ========================================================= -->
+
+        <!-- PAGE ACCUEIL TOURNOI ÉQUIPE (MENU) -->
+        <div id="accueil-equipe" class="page">
+            <button class="btn-retour" onclick="showPage('choix-mode')">⬅ Retour à l'accueil</button>
+            <h1>👥 Tournoi Équipe (Double)</h1>
+            <div class="menu-container" style="margin-top: 20px;">
+                <!-- Ligne 1 : Inscription & Liste -->
+                <div class="menu-row">
+                    <button class="menu-btn" onclick="showPage('inscription-equipe')">
+                        ➕ Inscrire les équipes
+                    </button>
+                    <button class="menu-btn" onclick="showPage('liste-equipes')">
+                        👥 Liste des équipes
+                        <span style="font-size: 0.9rem; font-weight: normal; opacity: 0.8">(Accès fiches)</span>
+                    </button>
+                </div>
+
+                <!-- Ligne 2 : Résultats & Classement -->
+                <div class="menu-row">
+                    <button class="menu-btn" onclick="showPage('saisie-equipe')">
+                        📝 Entrer les résultats
+                    </button>
+                    <button class="menu-btn" onclick="showPage('classement-equipe')">
+                        🏆 Classement
+                    </button>
+                </div>
+
+                <!-- Ligne 3 : Réglages & Réinitialiser (Taille réduite) -->
+                <div class="menu-row">
+                    <button class="menu-btn menu-btn-sm" onclick="showPage('settings-equipe')"
+                        style="border-color: #607d8b; color: #455a64;">
+                        ⚙️ Réglages
+                    </button>
+                    <button class="menu-btn menu-btn-sm" onclick="reinitialiserAppEquipe()"
+                        style="border-color: var(--danger); color: var(--danger);">
+                        🗑️ Réinitialiser
+                    </button>
+                </div>
+
+                <!-- Ligne 4 : Sauvegarde, Export, Import (Bas de page, taille réduite) -->
+                <div class="menu-row">
+                    <button class="menu-btn menu-btn-sm" onclick="telechargerDonneesEquipe()"
+                        style="border-color: #f39c12; color: #d35400;">
+                        💾 Sauvegarder
+                    </button>
+                    <button class="menu-btn menu-btn-sm" onclick="exporterClassementExcelEquipe()"
+                        style="border-color: #27ae60; color: #27ae60;">
+                        📊 Exporter
+                    </button>
+                    <button class="menu-btn menu-btn-sm" onclick="document.getElementById('jsonInputEquipe').click()"
+                        style="border-color: #8e44ad; color: #8e44ad;">
+                        📂 Importer
+                    </button>
+                </div>
+                <input type="file" id="jsonInputEquipe" accept=".json" style="display: none;"
+                    onchange="importerDonneesJSONEquipe()">
+            </div>
+
+            <div id="msg-sauvegarde-equipe" class="alert">✅ Données d'équipes sauvegardées !</div>
+
+            <div
+                style="text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #95a5a6; line-height: 1.4;">
+                Application créée par Romain Beauvais<br>
+                GEPEPS Versailles - Collège Léonard De Vinci - Eragny sur Oise
+            </div>
+        </div>
+
+        <!-- PAGE RÉGLAGES ÉQUIPE -->
+        <div id="settings-equipe" class="page">
+            <button class="btn-retour" onclick="showPage('accueil-equipe')">⬅ Retour au Menu Équipe</button>
+            <h2>⚙️ Réglages du Tournoi Équipe</h2>
+            <div class="form-group" style="display: flex; flex-direction: column; align-items: center;">
+                <div style="margin-bottom: 20px; width: 50%;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Points par Victoire :</label>
+                    <input type="number" id="set-victoire-equipe" min="0" value="10">
+                </div>
+                <div style="margin-bottom: 20px; width: 50%;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Points par Défaite :</label>
+                    <input type="number" id="set-defaite-equipe" min="0" value="5">
+                </div>
+                <div style="margin-bottom: 20px; width: 50%;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Points pour l'Arbitrage
+                        :</label>
+                    <input type="number" id="set-arbitre-equipe" min="0" value="2">
+                </div>
+                <div
+                    style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; background: #eef2f7; padding: 15px; border-radius: var(--radius-sm); width: 50%;">
+                    <input type="checkbox" id="set-bonus-equipe" style="width: auto;">
+                    <label for="set-bonus-equipe" style="font-weight: bold; cursor: pointer;">Activer le bonus de
+                        classement</label>
+                </div>
+                <p style="font-size: 0.85rem; color: #7f8c8d; font-style: italic; text-align: center;">
+                    Si activé, une victoire contre une équipe mieux classée rapporte des points bonus (1 point par
+                    position d'écart).
+                </p>
+                <button class="btn-success" style="width: 80%; margin-top: 20px; padding: 25px; font-size: 1.5rem;"
+                    onclick="saveSettingsEquipe()">Valider les Réglages</button>
+                <div id="msg-settings-equipe" class="alert alert-success">✅ Réglages enregistrés avec succès !</div>
+            </div>
+        </div>
+
+        <!-- PAGE INSCRIPTION ÉQUIPE -->
+        <div id="inscription-equipe" class="page">
+            <button class="btn-retour" onclick="showPage('accueil-equipe')">⬅ Retour au Menu Équipe</button>
+            <h2>Inscrire des Équipes (Binômes)</h2>
+            <div class="form-group">
+                <h3>Ajout Manuel d'une Équipe</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <input type="text" id="nom-joueur1-equipe" placeholder="Joueur 1 (Nom Prénom)"
+                        style="flex: 1; min-width: 200px;">
+                    <input type="text" id="nom-joueur2-equipe" placeholder="Joueur 2 (Nom Prénom)"
+                        style="flex: 1; min-width: 200px;">
+                    <button onclick="ajouterEquipe()">Ajouter l'équipe</button>
+                </div>
+                <hr>
+                <h3>Import CSV / Excel</h3>
+                <label style="display:block; margin-bottom: 10px;">Fichier avec une équipe par ligne (2 noms séparés par
+                    <code>;</code>, <code>,</code>, <code>/</code> ou <code>&amp;</code>) :</label>
+                <input type="file" id="csvFileEquipe" accept=".csv, .xls, .xlsx" onchange="importCSVEquipe()">
+            </div>
+            <div id="msg-ajout-equipe" class="alert alert-success">✅ Équipe ajoutée avec succès !</div>
+        </div>
+
+        <!-- PAGE LISTE ÉQUIPES -->
+        <div id="liste-equipes" class="page">
+            <button class="btn-retour" onclick="showPage('accueil-equipe')">⬅ Retour au Menu Équipe</button>
+            <h2>Fiches Équipes</h2>
+            <p style="text-align: center; color: #7f8c8d;">Cliquez sur une équipe pour voir ses détails.</p>
+            <div id="liste-equipes-boutons"></div>
+        </div>
+
+        <!-- PAGE SAISIE ÉQUIPE -->
+        <div id="saisie-equipe" class="page">
+            <button class="btn-retour" onclick="showPage('accueil-equipe')">⬅ Retour au Menu Équipe</button>
+            <h2>Saisie du Match (Double)</h2>
+            <div class="match-players-row">
+                <div class="form-group player-group">
+                    <h3>🥇 Équipe Gagnante</h3>
+                    <select id="select-gagnant-equipe"></select>
+                    <div class="score-input">
+                        <!-- Milliers -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('ge-m', 1)">▲</button>
+                            <input type="number" id="ge-m" class="digit-m" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('ge-m', -1)">▼</button>
+                        </div>
+                        <!-- Centaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('ge-c', 1)">▲</button>
+                            <input type="number" id="ge-c" class="digit-c" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('ge-c', -1)">▼</button>
+                        </div>
+                        <!-- Dizaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('ge-d', 1)">▲</button>
+                            <input type="number" id="ge-d" class="digit-d" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('ge-d', -1)">▼</button>
+                        </div>
+                        <!-- Unités -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('ge-u', 1)">▲</button>
+                            <input type="number" id="ge-u" class="digit-u" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('ge-u', -1)">▼</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group player-group">
+                    <h3>🥈 Équipe Perdante</h3>
+                    <select id="select-perdant-equipe"></select>
+                    <div class="score-input">
+                        <!-- Milliers -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('pe-m', 1)">▲</button>
+                            <input type="number" id="pe-m" class="digit-m" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('pe-m', -1)">▼</button>
+                        </div>
+                        <!-- Centaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('pe-c', 1)">▲</button>
+                            <input type="number" id="pe-c" class="digit-c" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('pe-c', -1)">▼</button>
+                        </div>
+                        <!-- Dizaines -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('pe-d', 1)">▲</button>
+                            <input type="number" id="pe-d" class="digit-d" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('pe-d', -1)">▼</button>
+                        </div>
+                        <!-- Unités -->
+                        <div class="digit-wrapper">
+                            <button class="spin-btn up" onclick="adjustScore('pe-u', 1)">▲</button>
+                            <input type="number" id="pe-u" class="digit-u" min="0" max="9" value="0" readonly>
+                            <button class="spin-btn down" onclick="adjustScore('pe-u', -1)">▼</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="width: 50%; margin-left: auto; margin-right: auto;">
+                <h3>⚖️ Arbitre (Équipe)</h3>
+                <select id="select-arbitre-equipe"></select>
+            </div>
+            <div style="text-align: center;">
+                <button class="btn-success" onclick="enregistrerMatchEquipe()">Valider le Match</button>
+                <div id="msg-confirm-equipe" class="alert alert-success">✅ Match enregistré avec succès !</div>
+            </div>
+        </div>
+
+        <!-- PAGE CLASSEMENT ÉQUIPE -->
+        <div id="classement-equipe" class="page">
+            <button class="btn-retour" onclick="showPage('accueil-equipe')">⬅ Retour au Menu Équipe</button>
+            <h2>Classement Général des Équipes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Équipe (Joueurs)</th>
+                        <th>Points</th>
+                        <th>Gagnés</th>
+                        <th>Perdus</th>
+                        <th>Arbitrés</th>
+                    </tr>
+                </thead>
+                <tbody id="body-classement-equipe"></tbody>
+            </table>
+        </div>
+
+        <!-- PAGE FICHE ÉQUIPE -->
+        <div id="fiche-equipe" class="page">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-retour" onclick="showPage('liste-equipes')" style="margin-bottom: 0;">⬅ Retour
+                    Liste Équipes</button>
+                <button class="btn-retour" onclick="showPage('classement-equipe')" style="margin-bottom: 0;">🏆 Retour
+                    Classement</button>
+            </div>
+            <div id="stats-detaillees-equipe" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <script>
+        let eleves = JSON.parse(localStorage.getItem('badm_eleves')) || [];
+        let allMatches = JSON.parse(localStorage.getItem('badm_matchs')) || [];
+        let settings = JSON.parse(localStorage.getItem('badm_settings')) || {
+            pointsVictoire: 10,
+            pointsDefaite: 5,
+            pointsArbitre: 2,
+            bonusClassement: false
+        };
+
+        // Données Tournoi Équipe
+        let equipes = JSON.parse(localStorage.getItem('badm_equipes')) || [];
+        let allMatchesEquipe = JSON.parse(localStorage.getItem('badm_matchs_equipe')) || [];
+        let settingsEquipe = JSON.parse(localStorage.getItem('badm_settings_equipe')) || {
+            pointsVictoire: 10,
+            pointsDefaite: 5,
+            pointsArbitre: 2,
+            bonusClassement: false
+        };
+
+        function saveSettings() {
+            settings.pointsVictoire = parseInt(document.getElementById('set-victoire').value) || 10;
+            settings.pointsDefaite = parseInt(document.getElementById('set-defaite').value) || 5;
+            settings.pointsArbitre = parseInt(document.getElementById('set-arbitre').value) || 2;
+            settings.bonusClassement = document.getElementById('set-bonus').checked;
+            localStorage.setItem('badm_settings', JSON.stringify(settings));
+
+            const msg = document.getElementById('msg-settings');
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+                showPage('accueil');
+            }, 1500);
+        }
+
+        function initSettingsUI() {
+            document.getElementById('set-victoire').value = settings.pointsVictoire;
+            document.getElementById('set-defaite').value = settings.pointsDefaite;
+            document.getElementById('set-arbitre').value = settings.pointsArbitre;
+            document.getElementById('set-bonus').checked = settings.bonusClassement;
+        }
+
+        function adjustScore(id, val) {
+            const input = document.getElementById(id);
+            if (!input) return;
+            let current = parseInt(input.value) || 0;
+            let next = current + val;
+            if (next > 9) next = 0; // Boucle si on veut, ou bloquer ? L'utilisateur préfère généralement que ça ne boucle pas sur des scores, mais ici c'est chiffre par chiffre.
+            // Erratum : Sur un cadenas à code ça boucle, mais sur un score c'est bizarre.
+            // On va bloquer à 0 et 9.
+            if (next > 9) next = 9;
+            if (next < 0) next = 0;
+            input.value = next;
+        }
+
+        function showPage(pageId) {
+            // Fermer les modals si on change de page
+            closeModal();
+            // Masquer toutes les pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            // Afficher la page demandée
+            const page = document.getElementById(pageId);
+            const mainContainer = document.querySelector('.container');
+
+            if (page) {
+                page.classList.add('active');
+                // Si on est sur la fiche élève ou équipe, on rend le conteneur transparent
+                if (pageId === 'fiche-eleve' || pageId === 'fiche-equipe') {
+                    mainContainer.classList.add('container-transparent');
+                } else {
+                    mainContainer.classList.remove('container-transparent');
+                }
+            } else {
+                console.error("Page introuvable : " + pageId);
+                return;
+            }
+
+            // Initialisations spécifiques (Tournoi Simple)
+            if (pageId === 'liste-eleves') renderListeEleves();
+            if (pageId === 'saisie') updateSelects();
+            if (pageId === 'classement') renderClassement();
+            if (pageId === 'settings') initSettingsUI();
+
+            // Initialisations spécifiques (Tournoi Équipe)
+            if (pageId === 'liste-equipes') renderListeEquipes();
+            if (pageId === 'saisie-equipe') updateSelectsEquipe();
+            if (pageId === 'classement-equipe') renderClassementEquipe();
+            if (pageId === 'settings-equipe') initSettingsUIEquipe();
+        }
+
+        // --- GESTION MODAL ---
+        function openModal(title, text, confirmBtnText, callback) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            const btn = document.getElementById('modal-btn-confirm');
+            btn.innerText = confirmBtnText;
+            btn.onclick = function () {
+                callback();
+                closeModal();
+            };
+            document.getElementById('modal-confirm').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-confirm').style.display = 'none';
+        }
+
+        function ajouterEleve(nom = null) {
+            const input = document.getElementById('nom-eleve');
+            const nomVal = nom || input.value.trim();
+            if (!nomVal) return;
+
+            if (!eleves.find(e => e.nom === nomVal)) {
+                eleves.push({
+                    nom: nomVal,
+                    matchsJoues: 0,
+                    matchsArbitres: 0,
+                    victoires: 0,
+                    defaites: 0,
+                    pointsMarques: 0,
+                    scoreClassement: 0
+                });
+                save();
+            }
+            input.value = '';
+
+            // Petit feedback visuel
+            if (!nom) { // Si ajout manuel
+                const msg = document.getElementById('msg-ajout');
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 2000);
+            }
+        }
+
+        function save() {
+            localStorage.setItem('badm_eleves', JSON.stringify(eleves));
+            localStorage.setItem('badm_matchs', JSON.stringify(allMatches));
+            showAutoSave();
+        }
+
+        function showAutoSave() {
+            const toast = document.getElementById('auto-save-toast');
+            toast.innerText = "💾 Sauvegardé !";
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        function renderListeEleves() {
+            const div = document.getElementById('liste-eleves-boutons');
+            div.innerHTML = '';
+            // Tri alphabétique
+            eleves.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(e => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-eleve';
+                btn.innerText = e.nom;
+                btn.onclick = () => afficherFicheEleve(e.nom);
+                div.appendChild(btn);
+            });
+        }
+
+        function updateSelects() {
+            const selects = ['select-gagnant', 'select-perdant', 'select-arbitre'];
+            selects.forEach(s => {
+                const sel = document.getElementById(s);
+                if (!sel) return;
+                sel.innerHTML = '<option value="">--Choisir--</option>';
+                // Tri alphabétique pour les selects aussi
+                eleves.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(e => {
+                    sel.innerHTML += `<option value="${e.nom}">${e.nom}</option>`;
+                });
+            });
+        }
+
+        function enregistrerMatch() {
+            const gNom = document.getElementById('select-gagnant').value;
+            const pNom = document.getElementById('select-perdant').value;
+            const aNom = document.getElementById('select-arbitre').value;
+
+            // Calcul des scores à partir des chiffres
+            const scoreG = (parseInt(document.getElementById('g-m').value) || 0) * 1000 +
+                (parseInt(document.getElementById('g-c').value) || 0) * 100 +
+                (parseInt(document.getElementById('g-d').value) || 0) * 10 +
+                (parseInt(document.getElementById('g-u').value) || 0);
+
+            const scoreP = (parseInt(document.getElementById('p-m').value) || 0) * 1000 +
+                (parseInt(document.getElementById('p-c').value) || 0) * 100 +
+                (parseInt(document.getElementById('p-d').value) || 0) * 10 +
+                (parseInt(document.getElementById('p-u').value) || 0);
+
+            if (!gNom || !pNom || gNom === pNom) {
+                alert("Veuillez choisir un gagnant et un perdant différents.");
+                return;
+            }
+
+            // 1) Vérification duplication Arbitre
+            if (aNom && (aNom === gNom || aNom === pNom)) {
+                alert("⛔ Erreur : Le même élève ne peut pas être joueur et arbitre en même temps !");
+                return;
+            }
+
+            // 2) Vérification de la logique du score
+            if (scoreP > scoreG) {
+                alert("⛔ Erreur Logique : Le score du perdant (" + scoreP + ") ne peut pas être supérieur à celui du gagnant (" + scoreG + ") !");
+                return;
+            }
+
+            // 3) Vérification Arbitre manquant (Message d'attention)
+            if (!aNom) {
+                openModal("⚖️ Arbitre Manquant", "Aucun arbitre n'est renseigné. Voulez-vous continuer ?", "Continuer", () => {
+                    finaliserEnregistrementMatch(gNom, pNom, aNom, scoreG, scoreP);
+                });
+            } else {
+                finaliserEnregistrementMatch(gNom, pNom, aNom, scoreG, scoreP);
+            }
+        }
+
+        function finaliserEnregistrementMatch(gNom, pNom, aNom, scoreG, scoreP) {
+            // Calcul du bonus de classement si activé
+            let bonus = 0;
+            if (settings.bonusClassement) {
+                const sorted = [...eleves].sort((a, b) => b.scoreClassement - a.scoreClassement);
+                const rangG = sorted.findIndex(el => el.nom === gNom) + 1;
+                const rangP = sorted.findIndex(el => el.nom === pNom) + 1;
+
+                // Si le gagnant est moins bien classé (rang plus grand), il gagne un bonus
+                if (rangG > rangP) {
+                    bonus = rangG - rangP;
+                }
+            }
+
+            // Mise à jour Gagnant
+            let g = eleves.find(e => e.nom === gNom);
+            if (g) {
+                g.matchsJoues++;
+                g.victoires++;
+                g.pointsMarques += scoreG;
+                g.scoreClassement += (settings.pointsVictoire + bonus);
+            }
+
+            // Mise à jour Perdant
+            let p = eleves.find(e => e.nom === pNom);
+            if (p) {
+                p.matchsJoues++;
+                p.defaites++;
+                p.pointsMarques += scoreP;
+                p.scoreClassement += settings.pointsDefaite;
+            }
+
+            // Mise à jour Arbitre
+            if (aNom) {
+                let a = eleves.find(e => e.nom === aNom);
+                if (a) {
+                    a.matchsArbitres++;
+                    a.scoreClassement += settings.pointsArbitre;
+                }
+            }
+
+            // Enregistrement Historique Match
+            const newMatch = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                gagnant: gNom,
+                perdant: pNom,
+                scoreG: scoreG,
+                scoreP: scoreP,
+                arbitre: aNom || null
+            };
+            allMatches.push(newMatch);
+
+            save();
+            document.getElementById('msg-confirm').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('msg-confirm').style.display = 'none';
+                // On reste sur la page pour enchainer les saisies
+            }, 1500);
+
+            // Reset scores
+            document.querySelectorAll('.score-input input').forEach(i => i.value = '0');
+            updateSelects(); // Reset selects
+        }
+
+        // Nouvelle fonction renommée pour forcer la mise à jour du cache navigateur
+        function afficherFicheEleve(nom) {
+            const e = eleves.find(el => el.nom === nom);
+            if (!e) return;
+
+            // Découpage du nom pour le style Pro
+            const parts = e.nom.split(' ');
+            const prenom = parts.length > 1 ? parts.slice(0, -1).join(' ') : "";
+            const nomFamille = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+
+            // Calculs (Rang, %, Moyenne)
+            const sorted = [...eleves].sort((a, b) => b.scoreClassement - a.scoreClassement);
+            const rang = sorted.findIndex(el => el.nom === nom) + 1;
+
+            const totalMatchs = e.matchsJoues || 0;
+            const ptsClass = e.scoreClassement || 0;
+            const victoireCount = e.victoires || 0;
+            const pointsTotal = e.pointsMarques || 0;
+
+            const pourc = totalMatchs === 0 ? "0" : ((victoireCount / totalMatchs) * 100).toFixed(0);
+            const moyenne = totalMatchs === 0 ? "0.0" : (pointsTotal / totalMatchs).toFixed(1);
+
+            // Couleur dynamique pour le % de victoire
+            let winColor = '#3498db';
+            if (parseInt(pourc) >= 60) winColor = '#2ecc71';
+            else if (parseInt(pourc) >= 40) winColor = '#f39c12';
+            else winColor = '#e74c3c';
+
+            // --- Historique des matchs ---
+            const matchesEleve = allMatches
+                .filter(m => m.gagnant === nom || m.perdant === nom)
+                .sort((a, b) => b.id - a.id);
+
+            let historyHtml = '<div class="pro-history-section"><div class="pro-history-title"><span>🏸</span> Historique des Matchs</div>';
+
+            if (matchesEleve.length === 0) {
+                historyHtml += '<p style="color:#95a5a6; font-style:italic; text-align:center;">Aucun match enregistré.</p>';
+            } else {
+                matchesEleve.forEach(m => {
+                    const isWin = (m.gagnant === nom);
+                    const adversaire = isWin ? m.perdant : m.gagnant;
+                    const scoreMoi = isWin ? m.scoreG : m.scoreP;
+                    const scoreAdv = isWin ? m.scoreP : m.scoreG;
+                    const color = isWin ? '#2ecc71' : '#e74c3c';
+                    const bg = isWin ? '#e8f5e9' : '#fdedec';
+
+                    historyHtml += `
+                        <div class="pro-match-card">
+                            <div class="pro-match-result" style="background:${bg}; color:${color};">${isWin ? 'V' : 'D'}</div>
+                            <div class="pro-match-info">
+                                <div class="pro-match-score">${scoreMoi} - ${scoreAdv}</div>
+                                <div class="pro-match-adv">vs <strong>${adversaire}</strong></div>
+                            </div>
+                            <div class="pro-match-time">
+                                ${new Date(m.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            historyHtml += '</div>';
+
+            const container = document.getElementById('stats-detaillees');
+            container.innerHTML = `
+                <div class="pro-fiche-container">
+                    <div class="pro-hero">
+                        <div class="pro-name-container">
+                            <p class="pro-firstname">${prenom}</p>
+                            <h2 class="pro-lastname">${nomFamille}</h2>
+                        </div>
+                        <div class="pro-rank-box">
+                            <div class="pro-rank-label">Ranking</div>
+                            <div class="pro-rank-value">${rang}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pro-stats-bar">
+                        <div class="pro-stat-item">
+                            <span class="label">Points</span>
+                            <span class="value">${ptsClass}</span>
+                        </div>
+                        <div class="pro-stat-item">
+                            <span class="label">Win %</span>
+                            <span class="value" style="color:${winColor}">${pourc}%</span>
+                        </div>
+                        <div class="pro-stat-item">
+                            <span class="label">Moyenne</span>
+                            <span class="value">${moyenne}</span>
+                        </div>
+                        <div class="pro-stat-item">
+                            <span class="label">Matchs</span>
+                            <span class="value">${totalMatchs}</span>
+                        </div>
+                    </div>
+
+                    <div class="pro-details-grid">
+                        <div class="pro-detail-card">
+                            <span class="label">Victoires</span>
+                            <span class="value" style="color:#2ecc71">${e.victoires}</span>
+                        </div>
+                        <div class="pro-detail-card">
+                            <span class="label">Défaites</span>
+                            <span class="value" style="color:#e74c3c">${e.defaites}</span>
+                        </div>
+                        <div class="pro-detail-card">
+                            <span class="label">Arbitrages</span>
+                            <span class="value">${e.matchsArbitres}</span>
+                        </div>
+                        <div class="pro-detail-card">
+                            <span class="label">Total Points</span>
+                            <span class="value">${e.pointsMarques}</span>
+                        </div>
+                    </div>
+
+                    ${historyHtml}
+                </div>
+            `;
+            showPage('fiche-eleve');
+        }
+
+        function renderClassement() {
+            const tbody = document.getElementById('body-classement');
+            tbody.innerHTML = '';
+            const trie = [...eleves].sort((a, b) => b.scoreClassement - a.scoreClassement);
+
+            trie.forEach((e, index) => {
+                let medaille = '';
+                if (index === 0) medaille = '🥇 ';
+                if (index === 1) medaille = '🥈 ';
+                if (index === 2) medaille = '🥉 ';
+
+                tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight:bold; color:var(--primary)">${medaille}${index + 1}</td>
+                    <td><span class="nom-cliquable" onclick="afficherFicheEleve('${e.nom}')">${e.nom}</span></td>
+                    <td style="font-weight:bold">${e.scoreClassement}</td>
+                    <td>${e.victoires}</td>
+                    <td>${e.defaites}</td>
+                    <td>${e.matchsArbitres}</td>
+                </tr>
+            `;
+            });
+        }
+
+        function importCSV() {
+            const file = document.getElementById('csvFile').files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const rows = e.target.result.split('\\n');
+                let count = 0;
+                rows.forEach(row => {
+                    const cleanRow = row.trim().replace(/;/, '');
+                    if (cleanRow) {
+                        ajouterEleve(cleanRow);
+                        count++;
+                    }
+                });
+                alert(count + " élèves importés !");
+            };
+            reader.readAsText(file);
+        }
+
+        function telechargerDonnees() {
+            const exportData = {
+                version: "2.0",
+                date: new Date().toISOString(),
+                eleves: eleves,
+                allMatches: allMatches,
+                settings: settings
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "tournoi_badminton_sauvegarde.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            const msg = document.getElementById('msg-sauvegarde');
+            msg.className = 'alert alert-info';
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+        }
+
+        function exporterClassementExcel() {
+            // Trie les élèves
+            const trie = [...eleves].sort((a, b) => b.scoreClassement - a.scoreClassement);
+
+            // En-têtes CSV (séparateur point-virgule pour Excel fr)
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM pour UTF-8 Excel
+            // Colonnes demandées : Rang, Prénom, Points, Gagnés, Perdus, Arbitrés
+            csvContent += "Rang;Prénom;Points;Gagnés;Perdus;Arbitrés\r\n";
+
+            trie.forEach((e, index) => {
+                const row = [
+                    index + 1,
+                    e.nom, // Prénom (Nom complet)
+                    e.scoreClassement,
+                    e.victoires,
+                    e.defaites,
+                    e.matchsArbitres
+                ].join(";");
+                csvContent += row + "\r\n"; // Utilisation de CRLF pour Excel
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "classement_tournoi_bad.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importerDonneesJSON() {
+            const file = document.getElementById('jsonInput').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // Gestion du format d'import
+                    if (Array.isArray(data)) {
+                        // Ancien format (juste la liste des élèves)
+                        openModal("📥 Importer Données", "Format ancien détecté (liste d'élèves). Voulez-vous importer ?", "Importer", () => {
+                            eleves = data;
+                            save();
+                            alert("✅ Élèves importés avec succès !");
+                            location.reload();
+                        });
+                    } else if (data && (data.eleves || data.students)) {
+                        // Nouveau format (objet complet)
+                        openModal("📥 Importer Données", "Attention : Vous allez écraser TOUTES les données (élèves, matchs, réglages). Confirmer ?", "Tout importer", () => {
+                            eleves = data.eleves || data.students || [];
+                            // Récupération de l'historique avec gestion des alias possibles
+                            allMatches = data.allMatches || data.matchs || data.matches || data.allMatchs || [];
+                            // Récupération des réglages
+                            if (data.settings || data.reglages) {
+                                settings = data.settings || data.reglages;
+                            }
+                            save();
+                            alert("✅ Toutes les données ont été importées avec succès !");
+                            location.reload();
+                        });
+                    } else {
+                        alert("⛔ Erreur : Le fichier ne semble pas être un export valide de cette application.");
+                    }
+                } catch (err) {
+                    alert("⛔ Erreur de lecture du fichier JSON : " + err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function reinitialiserApp() {
+            openModal("🗑️ Réinitialisation", "Attention : Vous allez effacer TOUTES les données du tournoi simple (élèves, matchs, classements). Confirmer ?", "Tout effacer", () => {
+                localStorage.removeItem('badm_eleves');
+                localStorage.removeItem('badm_matchs');
+                localStorage.removeItem('badm_settings');
+                location.reload();
+            });
+        }
+
+        // =========================================================
+        //               LOGIQUE TOURNOI ÉQUIPE (DOUBLE)
+        // =========================================================
+
+        function saveSettingsEquipe() {
+            settingsEquipe.pointsVictoire = parseInt(document.getElementById('set-victoire-equipe').value) || 10;
+            settingsEquipe.pointsDefaite = parseInt(document.getElementById('set-defaite-equipe').value) || 5;
+            settingsEquipe.pointsArbitre = parseInt(document.getElementById('set-arbitre-equipe').value) || 2;
+            settingsEquipe.bonusClassement = document.getElementById('set-bonus-equipe').checked;
+            localStorage.setItem('badm_settings_equipe', JSON.stringify(settingsEquipe));
+
+            const msg = document.getElementById('msg-settings-equipe');
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+                showPage('accueil-equipe');
+            }, 1500);
+        }
+
+        function initSettingsUIEquipe() {
+            document.getElementById('set-victoire-equipe').value = settingsEquipe.pointsVictoire;
+            document.getElementById('set-defaite-equipe').value = settingsEquipe.pointsDefaite;
+            document.getElementById('set-arbitre-equipe').value = settingsEquipe.pointsArbitre;
+            document.getElementById('set-bonus-equipe').checked = settingsEquipe.bonusClassement;
+        }
+
+        function ajouterEquipe(j1Param = null, j2Param = null) {
+            const inputJ1 = document.getElementById('nom-joueur1-equipe');
+            const inputJ2 = document.getElementById('nom-joueur2-equipe');
+            const j1 = j1Param !== null ? j1Param.trim() : inputJ1.value.trim();
+            const j2 = j2Param !== null ? j2Param.trim() : inputJ2.value.trim();
+
+            if (!j1 || !j2) {
+                if (j1Param === null) {
+                    alert("Veuillez renseigner les noms des 2 joueurs de l'équipe.");
+                }
+                return;
+            }
+
+            if (j1.toLowerCase() === j2.toLowerCase()) {
+                if (j1Param === null) {
+                    alert("⛔ Les 2 joueurs d'une même équipe doivent être différents.");
+                }
+                return;
+            }
+
+            const nomEquipe = `${j1} & ${j2}`;
+            const existeDeja = equipes.find(eq =>
+                eq.nom.toLowerCase() === nomEquipe.toLowerCase() ||
+                (eq.joueur1 && eq.joueur2 &&
+                    eq.joueur1.toLowerCase() === j2.toLowerCase() &&
+                    eq.joueur2.toLowerCase() === j1.toLowerCase())
+            );
+
+            if (!existeDeja) {
+                equipes.push({
+                    nom: nomEquipe,
+                    joueur1: j1,
+                    joueur2: j2,
+                    matchsJoues: 0,
+                    matchsArbitres: 0,
+                    victoires: 0,
+                    defaites: 0,
+                    pointsMarques: 0,
+                    scoreClassement: 0
+                });
+                saveEquipe();
+            }
+
+            if (j1Param === null) {
+                inputJ1.value = '';
+                inputJ2.value = '';
+                const msg = document.getElementById('msg-ajout-equipe');
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 2000);
+            }
+        }
+
+        function saveEquipe() {
+            localStorage.setItem('badm_equipes', JSON.stringify(equipes));
+            localStorage.setItem('badm_matchs_equipe', JSON.stringify(allMatchesEquipe));
+            showAutoSave();
+        }
+
+        function renderListeEquipes() {
+            const div = document.getElementById('liste-equipes-boutons');
+            div.innerHTML = '';
+            // Tri alphabétique
+            equipes.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(eq => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-eleve';
+                btn.innerText = eq.nom;
+                btn.onclick = () => afficherFicheEquipe(eq.nom);
+                div.appendChild(btn);
+            });
+        }
+
+        function updateSelectsEquipe() {
+            const selects = ['select-gagnant-equipe', 'select-perdant-equipe', 'select-arbitre-equipe'];
+            selects.forEach(s => {
+                const sel = document.getElementById(s);
+                if (!sel) return;
+                sel.innerHTML = '<option value="">--Choisir une équipe--</option>';
+                equipes.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(eq => {
+                    const opt = document.createElement('option');
+                    opt.value = eq.nom;
+                    opt.textContent = eq.nom;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        function enregistrerMatchEquipe() {
+            const gNom = document.getElementById('select-gagnant-equipe').value;
+            const pNom = document.getElementById('select-perdant-equipe').value;
+            const aNom = document.getElementById('select-arbitre-equipe').value;
+
+            const scoreG = (parseInt(document.getElementById('ge-m').value) || 0) * 1000 +
+                (parseInt(document.getElementById('ge-c').value) || 0) * 100 +
+                (parseInt(document.getElementById('ge-d').value) || 0) * 10 +
+                (parseInt(document.getElementById('ge-u').value) || 0);
+
+            const scoreP = (parseInt(document.getElementById('pe-m').value) || 0) * 1000 +
+                (parseInt(document.getElementById('pe-c').value) || 0) * 100 +
+                (parseInt(document.getElementById('pe-d').value) || 0) * 10 +
+                (parseInt(document.getElementById('pe-u').value) || 0);
+
+            if (!gNom || !pNom || gNom === pNom) {
+                alert("Veuillez choisir une équipe gagnante et une équipe perdante différentes.");
+                return;
+            }
+
+            // 1) Vérification duplication Arbitre
+            if (aNom && (aNom === gNom || aNom === pNom)) {
+                alert("⛔ Erreur : La même équipe ne peut pas jouer et arbitrer en même temps !");
+                return;
+            }
+
+            // 2) Vérification de la logique du score
+            if (scoreP > scoreG) {
+                alert("⛔ Erreur Logique : Le score de l'équipe perdante (" + scoreP + ") ne peut pas être supérieur à celui de l'équipe gagnante (" + scoreG + ") !");
+                return;
+            }
+
+            // 3) Vérification Arbitre manquant
+            if (!aNom) {
+                openModal("⚖️ Arbitre Manquant", "Aucune équipe arbitre n'est renseignée. Voulez-vous continuer ?", "Continuer", () => {
+                    finaliserEnregistrementMatchEquipe(gNom, pNom, aNom, scoreG, scoreP);
+                });
+            } else {
+                finaliserEnregistrementMatchEquipe(gNom, pNom, aNom, scoreG, scoreP);
+            }
+        }
+
+        function finaliserEnregistrementMatchEquipe(gNom, pNom, aNom, scoreG, scoreP) {
+            let bonus = 0;
+            if (settingsEquipe.bonusClassement) {
+                const sorted = [...equipes].sort((a, b) => b.scoreClassement - a.scoreClassement);
+                const rangG = sorted.findIndex(eq => eq.nom === gNom) + 1;
+                const rangP = sorted.findIndex(eq => eq.nom === pNom) + 1;
+
+                if (rangG > rangP) {
+                    bonus = rangG - rangP;
+                }
+            }
+
+            // Mise à jour Équipe Gagnante
+            let g = equipes.find(eq => eq.nom === gNom);
+            if (g) {
+                g.matchsJoues++;
+                g.victoires++;
+                g.pointsMarques += scoreG;
+                g.scoreClassement += (settingsEquipe.pointsVictoire + bonus);
+            }
+
+            // Mise à jour Équipe Perdante
+            let p = equipes.find(eq => eq.nom === pNom);
+            if (p) {
+                p.matchsJoues++;
+                p.defaites++;
+                p.pointsMarques += scoreP;
+                p.scoreClassement += settingsEquipe.pointsDefaite;
+            }
+
+            // Mise à jour Équipe Arbitre
+            if (aNom) {
+                let a = equipes.find(eq => eq.nom === aNom);
+                if (a) {
+                    a.matchsArbitres++;
+                    a.scoreClassement += settingsEquipe.pointsArbitre;
+                }
+            }
+
+            const newMatch = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                gagnant: gNom,
+                perdant: pNom,
+                scoreG: scoreG,
+                scoreP: scoreP,
+                arbitre: aNom || null
+            };
+            allMatchesEquipe.push(newMatch);
+
+            saveEquipe();
+            document.getElementById('msg-confirm-equipe').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('msg-confirm-equipe').style.display = 'none';
+            }, 1500);
+
+            // Reset scores de la page saisie-equipe
+            document.querySelectorAll('#saisie-equipe .score-input input').forEach(i => i.value = '0');
+            updateSelectsEquipe();
+        }
+
+        function afficherFicheEquipe(nom) {
+            const eq = equipes.find(el => el.nom === nom);
+            if (!eq) return;
+
+            let joueur1 = eq.joueur1;
+            let joueur2 = eq.joueur2;
+            if (!joueur1 || !joueur2) {
+                const splitNames = eq.nom.split(/\s*(?:&|\/|-)\s*/);
+                joueur1 = splitNames[0] || eq.nom;
+                joueur2 = splitNames[1] || "";
+            }
+
+            const sorted = [...equipes].sort((a, b) => b.scoreClassement - a.scoreClassement);
+            const rang = sorted.findIndex(el => el.nom === nom) + 1;
+
+            const totalMatchs = eq.matchsJoues || 0;
+            const ptsClass = eq.scoreClassement || 0;
+            const victoireCount = eq.victoires || 0;
+            const pointsTotal = eq.pointsMarques || 0;
+
+            const pourc = totalMatchs === 0 ? "0" : ((victoireCount / totalMatchs) * 100).toFixed(0);
+            const moyenne = totalMatchs === 0 ? "0.0" : (pointsTotal / totalMatchs).toFixed(1);
+
+            let winColor = '#3498db';
+            if (parseInt(pourc) >= 60) winColor = '#2ecc71';
+            else if (parseInt(pourc) >= 40) winColor = '#f39c12';
+            else winColor = '#e74c3c';
+
+            const matchesEquipe = allMatchesEquipe
+                .filter(m => m.gagnant === nom || m.perdant === nom)
+                .sort((a, b) => b.id - a.id);
+
+            let historyHtml = '<div class="pro-history-section"><div class="pro-history-title"><span>🏸</span> Historique des Matchs</div>';
+
+            if (matchesEquipe.length === 0) {
+                historyHtml += '<p style="color:#95a5a6; font-style:italic; text-align:center;">Aucun match enregistré.</p>';
+            } else {
+                matchesEquipe.forEach(m => {
+                    const isWin = (m.gagnant === nom);
+                    const adversaire = isWin ? m.perdant : m.gagnant;
+                    const scoreMoi = isWin ? m.scoreG : m.scoreP;
+                    const scoreAdv = isWin ? m.scoreP : m.scoreG;
+                    const color = isWin ? '#2ecc71' : '#e74c3c';
+                    const bg = isWin ? '#e8f5e9' : '#fdedec';
+
+                    historyHtml += `
+                        <div class="pro-match-card">
+                            <div class="pro-match-result" style="background:${bg}; color:${color};">${isWin ? 'V' : 'D'}</div>
+                            <div class="pro-match-info">
+                                <div class="pro-match-score">${scoreMoi} - ${scoreAdv}</div>
+                                <div class="pro-match-adv">vs <strong>${adversaire}</strong></div>
+                            </div>
+                            <div class="pro-match-time">
+                                ${new Date(m.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            historyHtml += '</div>';
+
+            const container = document.getElementById('stats-detaillees-equipe');
+            container.innerHTML = `
+                <div class="pro-fiche-container">
+                    <div class="pro-hero">
+                        <div class="pro-name-container">
+                            <p class="pro-firstname" style="text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; margin-bottom: 8px;">👥 Équipe Double</p>
+                            <h2 class="pro-lastname" style="font-size: 2.2rem; line-height: 1.2;">${joueur1}<br><span style="color: var(--secondary); font-weight: 400;">&amp;</span> ${joueur2}</h2>
+                        </div>
+                        <div class="pro-rank-box">
+                            <div class="pro-rank-label">Ranking</div>
+                            <div class="pro-rank-value">${rang}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pro-stats-bar">
+                        <div class="pro-stat-item">
+                            <span class="label">Points</span>
+                            <span class="value">${ptsClass}</span>
+                        </div>
+                        <div class="pro-stat-item">
+                            <span class="label">Win %</span>
+                            <span class="value" style="color:${winColor}">${pourc}%</span>
+                        </div>
+                        <div class="pro-stat-item">
+                            <span class="label">Moyenne</span>
+                            <span class="value">${moyenne}</span>
+                        </div>
+                        <div class="pro-stat-item">
+                            <span class="label">Matchs</span>
+                            <span class="value">${totalMatchs}</span>
+                        </div>
+                    </div>
+
+                    <div class="pro-details-grid">
+                        <div class="pro-detail-card">
+                            <span class="label">Victoires</span>
+                            <span class="value" style="color:#2ecc71">${eq.victoires}</span>
+                        </div>
+                        <div class="pro-detail-card">
+                            <span class="label">Défaites</span>
+                            <span class="value" style="color:#e74c3c">${eq.defaites}</span>
+                        </div>
+                        <div class="pro-detail-card">
+                            <span class="label">Arbitrages</span>
+                            <span class="value">${eq.matchsArbitres}</span>
+                        </div>
+                        <div class="pro-detail-card">
+                            <span class="label">Total Points</span>
+                            <span class="value">${eq.pointsMarques}</span>
+                        </div>
+                    </div>
+
+                    ${historyHtml}
+                </div>
+            `;
+            showPage('fiche-equipe');
+        }
+
+        function renderClassementEquipe() {
+            const tbody = document.getElementById('body-classement-equipe');
+            tbody.innerHTML = '';
+            const trie = [...equipes].sort((a, b) => b.scoreClassement - a.scoreClassement);
+
+            trie.forEach((eq, index) => {
+                let medaille = '';
+                if (index === 0) medaille = '🥇 ';
+                if (index === 1) medaille = '🥈 ';
+                if (index === 2) medaille = '🥉 ';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:bold; color:var(--primary)">${medaille}${index + 1}</td>
+                    <td><span class="nom-cliquable"></span></td>
+                    <td style="font-weight:bold">${eq.scoreClassement}</td>
+                    <td>${eq.victoires}</td>
+                    <td>${eq.defaites}</td>
+                    <td>${eq.matchsArbitres}</td>
+                `;
+                const spanNom = tr.querySelector('.nom-cliquable');
+                spanNom.textContent = eq.nom;
+                spanNom.onclick = () => afficherFicheEquipe(eq.nom);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function importCSVEquipe() {
+            const file = document.getElementById('csvFileEquipe').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const rows = e.target.result.split(/\r?\n/);
+                let count = 0;
+                rows.forEach(row => {
+                    const cleanRow = row.trim();
+                    if (!cleanRow) return;
+                    const parts = cleanRow.split(/[;,/&]/).map(s => s.trim()).filter(Boolean);
+                    if (parts.length >= 2) {
+                        ajouterEquipe(parts[0], parts[1]);
+                        count++;
+                    }
+                });
+                alert(count + " équipes importées !");
+            };
+            reader.readAsText(file);
+        }
+
+        function telechargerDonneesEquipe() {
+            const exportData = {
+                version: "2.0-equipe",
+                date: new Date().toISOString(),
+                equipes: equipes,
+                allMatchesEquipe: allMatchesEquipe,
+                settingsEquipe: settingsEquipe
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "tournoi_badminton_equipes_sauvegarde.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            const msg = document.getElementById('msg-sauvegarde-equipe');
+            msg.className = 'alert alert-info';
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+        }
+
+        function exporterClassementExcelEquipe() {
+            const trie = [...equipes].sort((a, b) => b.scoreClassement - a.scoreClassement);
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "Rang;Équipe;Joueur 1;Joueur 2;Points;Gagnés;Perdus;Arbitrés\r\n";
+
+            trie.forEach((eq, index) => {
+                const row = [
+                    index + 1,
+                    eq.nom,
+                    eq.joueur1 || "",
+                    eq.joueur2 || "",
+                    eq.scoreClassement,
+                    eq.victoires,
+                    eq.defaites,
+                    eq.matchsArbitres
+                ].join(";");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "classement_tournoi_bad_equipes.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importerDonneesJSONEquipe() {
+            const file = document.getElementById('jsonInputEquipe').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    if (Array.isArray(data)) {
+                        openModal("📥 Importer Équipes", "Liste d'équipes détectée. Voulez-vous importer ?", "Importer", () => {
+                            equipes = data;
+                            saveEquipe();
+                            alert("✅ Équipes importées avec succès !");
+                            location.reload();
+                        });
+                    } else if (data && data.equipes) {
+                        openModal("📥 Importer Données Équipes", "Attention : Vous allez écraser TOUTES les données du tournoi équipe (équipes, matchs, réglages). Confirmer ?", "Tout importer", () => {
+                            equipes = data.equipes || [];
+                            allMatchesEquipe = data.allMatchesEquipe || data.allMatches || [];
+                            if (data.settingsEquipe || data.settings) {
+                                settingsEquipe = data.settingsEquipe || data.settings;
+                                localStorage.setItem('badm_settings_equipe', JSON.stringify(settingsEquipe));
+                            }
+                            saveEquipe();
+                            alert("✅ Toutes les données d'équipes ont été importées avec succès !");
+                            location.reload();
+                        });
+                    } else {
+                        alert("⛔ Erreur : Le fichier ne semble pas être un export valide du tournoi équipe.");
+                    }
+                } catch (err) {
+                    alert("⛔ Erreur de lecture du fichier JSON : " + err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function reinitialiserAppEquipe() {
+            openModal("🗑️ Réinitialisation Équipes", "Attention : Vous allez effacer TOUTES les données du tournoi équipe (équipes, matchs, classements). Confirmer ?", "Tout effacer", () => {
+                localStorage.removeItem('badm_equipes');
+                localStorage.removeItem('badm_matchs_equipe');
+                localStorage.removeItem('badm_settings_equipe');
+                location.reload();
+            });
+        }
+    </script>
+</body>
+
+</html>
