@@ -917,7 +917,7 @@
                     </button>
                     <button class="menu-btn menu-btn-sm" onclick="reinitialiserApp()"
                         style="border-color: var(--danger); color: var(--danger);">
-                        �️ Réinitialiser
+                        🗑️ Réinitialiser
                     </button>
                 </div>
 
@@ -925,7 +925,7 @@
                 <div class="menu-row">
                     <button class="menu-btn menu-btn-sm" onclick="telechargerDonnees()"
                         style="border-color: #f39c12; color: #d35400;">
-                        � Sauvegarder
+                        💾 Sauvegarder
                     </button>
                     <button class="menu-btn menu-btn-sm" onclick="exporterClassementExcel()"
                         style="border-color: #27ae60; color: #27ae60;">
@@ -933,14 +933,14 @@
                     </button>
                     <button class="menu-btn menu-btn-sm" onclick="document.getElementById('jsonInput').click()"
                         style="border-color: #8e44ad; color: #8e44ad;">
-                        📂 Importer
+                        📂 Charger
                     </button>
                 </div>
-                <input type="file" id="jsonInput" accept=".json" style="display: none;"
-                    onchange="importerDonneesJSON()">
+                <input type="file" id="jsonInput" accept=".json,application/json" style="display: none;"
+                    onchange="importerDonneesJSON(this)">
             </div>
 
-            <div id="msg-sauvegarde" class="alert">✅ Données sauvegardées !</div>
+            <div id="msg-sauvegarde" class="alert">📥 Fichier JSON téléchargé avec toutes les données du tournoi !</div>
 
             <div
                 style="text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #95a5a6; line-height: 1.4;">
@@ -1172,14 +1172,15 @@
                     </button>
                     <button class="menu-btn menu-btn-sm" onclick="document.getElementById('jsonInputEquipe').click()"
                         style="border-color: #8e44ad; color: #8e44ad;">
-                        📂 Importer
+                        📂 Charger
                     </button>
                 </div>
-                <input type="file" id="jsonInputEquipe" accept=".json" style="display: none;"
-                    onchange="importerDonneesJSONEquipe()">
+                <input type="file" id="jsonInputEquipe" accept=".json,application/json" style="display: none;"
+                    onchange="importerDonneesJSONEquipe(this)">
             </div>
 
-            <div id="msg-sauvegarde-equipe" class="alert">✅ Données d'équipes sauvegardées !</div>
+            <div id="msg-sauvegarde-equipe" class="alert">📥 Fichier JSON téléchargé avec toutes les données du tournoi
+                !</div>
 
             <div
                 style="text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #95a5a6; line-height: 1.4;">
@@ -1381,12 +1382,28 @@
             bonusClassement: false
         };
 
+        function saveAllToLocalStorage(showToast = true) {
+            localStorage.setItem('badm_eleves', JSON.stringify(eleves));
+            localStorage.setItem('badm_matchs', JSON.stringify(allMatches));
+            localStorage.setItem('badm_settings', JSON.stringify(settings));
+            localStorage.setItem('badm_equipes', JSON.stringify(equipes));
+            localStorage.setItem('badm_matchs_equipe', JSON.stringify(allMatchesEquipe));
+            localStorage.setItem('badm_settings_equipe', JSON.stringify(settingsEquipe));
+            if (showToast) {
+                showAutoSave();
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            saveAllToLocalStorage(false);
+        });
+
         function saveSettings() {
             settings.pointsVictoire = parseInt(document.getElementById('set-victoire').value) || 10;
             settings.pointsDefaite = parseInt(document.getElementById('set-defaite').value) || 5;
             settings.pointsArbitre = parseInt(document.getElementById('set-arbitre').value) || 2;
             settings.bonusClassement = document.getElementById('set-bonus').checked;
-            localStorage.setItem('badm_settings', JSON.stringify(settings));
+            saveAllToLocalStorage(true);
 
             const msg = document.getElementById('msg-settings');
             msg.style.display = 'block';
@@ -1496,14 +1513,12 @@
         }
 
         function save() {
-            localStorage.setItem('badm_eleves', JSON.stringify(eleves));
-            localStorage.setItem('badm_matchs', JSON.stringify(allMatches));
-            showAutoSave();
+            saveAllToLocalStorage(true);
         }
 
         function showAutoSave() {
             const toast = document.getElementById('auto-save-toast');
-            toast.innerText = "💾 Sauvegardé !";
+            toast.innerText = "💾 Sauvegarde auto (navigateur)";
             toast.style.display = 'flex';
             setTimeout(() => {
                 toast.style.display = 'none';
@@ -1806,26 +1821,44 @@
             reader.readAsText(file);
         }
 
-        function telechargerDonnees() {
+        function exporterFichierJSON(prefixFilename, alertId) {
+            // S'assurer que le localStorage est parfaitement synchronisé
+            saveAllToLocalStorage(false);
+
             const exportData = {
-                version: "2.0",
+                version: "2.1",
                 date: new Date().toISOString(),
                 eleves: eleves,
                 allMatches: allMatches,
-                settings: settings
+                settings: settings,
+                equipes: equipes,
+                allMatchesEquipe: allMatchesEquipe,
+                settingsEquipe: settingsEquipe
             };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().slice(0, 10);
             const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "tournoi_badminton_sauvegarde.json");
+            downloadAnchorNode.setAttribute("href", url);
+            downloadAnchorNode.setAttribute("download", `${prefixFilename}_${dateStr}.json`);
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-            const msg = document.getElementById('msg-sauvegarde');
-            msg.className = 'alert alert-info';
-            msg.style.display = 'block';
-            setTimeout(() => msg.style.display = 'none', 3000);
+            const msg = document.getElementById(alertId);
+            if (msg) {
+                msg.innerText = "📥 Fichier JSON téléchargé avec toutes les données du tournoi !";
+                msg.className = 'alert alert-info';
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3500);
+            }
+        }
+
+        function telechargerDonnees() {
+            exporterFichierJSON("tournoi_badminton_sauvegarde", "msg-sauvegarde");
         }
 
         function exporterClassementExcel() {
@@ -1858,8 +1891,8 @@
             document.body.removeChild(link);
         }
 
-        function importerDonneesJSON() {
-            const file = document.getElementById('jsonInput').files[0];
+        function chargerFichierJSON(inputEl, modeCible = 'all', alertId = 'msg-sauvegarde') {
+            const file = inputEl && inputEl.files ? inputEl.files[0] : null;
             if (!file) return;
 
             const reader = new FileReader();
@@ -1867,37 +1900,80 @@
                 try {
                     const data = JSON.parse(e.target.result);
 
-                    // Gestion du format d'import
                     if (Array.isArray(data)) {
-                        // Ancien format (juste la liste des élèves)
-                        openModal("📥 Importer Données", "Format ancien détecté (liste d'élèves). Voulez-vous importer ?", "Importer", () => {
-                            eleves = data;
-                            save();
-                            alert("✅ Élèves importés avec succès !");
-                            location.reload();
-                        });
-                    } else if (data && (data.eleves || data.students)) {
-                        // Nouveau format (objet complet)
-                        openModal("📥 Importer Données", "Attention : Vous allez écraser TOUTES les données (élèves, matchs, réglages). Confirmer ?", "Tout importer", () => {
-                            eleves = data.eleves || data.students || [];
-                            // Récupération de l'historique avec gestion des alias possibles
-                            allMatches = data.allMatches || data.matchs || data.matches || data.allMatchs || [];
-                            // Récupération des réglages
-                            if (data.settings || data.reglages) {
-                                settings = data.settings || data.reglages;
+                        // Ancien format (tableau simple d'élèves ou d'équipes)
+                        openModal("📂 Charger Données", "Format liste détecté. Voulez-vous charger ces données ?", "Charger", () => {
+                            if (modeCible === 'equipe') {
+                                equipes = data;
+                            } else {
+                                eleves = data;
                             }
-                            save();
-                            alert("✅ Toutes les données ont été importées avec succès !");
-                            location.reload();
+                            saveAllToLocalStorage(true);
+                            rafraichirUIComplete(alertId, "✅ Données chargées avec succès depuis le fichier JSON !");
+                        });
+                    } else if (data && typeof data === 'object' && (data.eleves || data.students || data.equipes || data.allMatches || data.allMatchesEquipe)) {
+                        openModal("📂 Charger une sauvegarde JSON", "Vous allez charger les données du fichier JSON (élèves, équipes, matchs et réglages) pour reprendre le tournoi. Confirmer ?", "Charger le tournoi", () => {
+                            if (Array.isArray(data.eleves) || Array.isArray(data.students)) {
+                                eleves = data.eleves || data.students;
+                            }
+                            if (Array.isArray(data.allMatches || data.matchs || data.matches || data.allMatchs)) {
+                                allMatches = data.allMatches || data.matchs || data.matches || data.allMatchs;
+                            }
+                            if (data.settings || data.reglages) {
+                                settings = { ...settings, ...(data.settings || data.reglages) };
+                            }
+                            if (Array.isArray(data.equipes)) {
+                                equipes = data.equipes;
+                            }
+                            if (Array.isArray(data.allMatchesEquipe)) {
+                                allMatchesEquipe = data.allMatchesEquipe;
+                            } else if (!data.eleves && Array.isArray(data.allMatches)) {
+                                // Compatibilité avec un export équipe 2.0 qui aurait utilisé allMatches
+                                allMatchesEquipe = data.allMatches;
+                            }
+                            if (data.settingsEquipe) {
+                                settingsEquipe = { ...settingsEquipe, ...data.settingsEquipe };
+                            } else if (!data.eleves && data.settings) {
+                                settingsEquipe = { ...settingsEquipe, ...data.settings };
+                            }
+
+                            saveAllToLocalStorage(true);
+                            rafraichirUIComplete(alertId, "✅ Sauvegarde JSON chargée avec succès ! Vous pouvez poursuivre le tournoi.");
                         });
                     } else {
-                        alert("⛔ Erreur : Le fichier ne semble pas être un export valide de cette application.");
+                        alert("⛔ Erreur : Le fichier sélectionné ne semble pas être une sauvegarde valide de cette application.");
                     }
                 } catch (err) {
-                    alert("⛔ Erreur de lecture du fichier JSON : " + err);
+                    alert("⛔ Erreur de lecture du fichier JSON : " + err.message);
+                } finally {
+                    inputEl.value = '';
                 }
             };
             reader.readAsText(file);
+        }
+
+        function rafraichirUIComplete(alertId, messageTexte) {
+            initSettingsUI();
+            initSettingsUIEquipe();
+            renderListeEleves();
+            updateSelects();
+            renderClassement();
+            renderListeEquipes();
+            updateSelectsEquipe();
+            renderClassementEquipe();
+
+            const msg = document.getElementById(alertId);
+            if (msg) {
+                msg.innerText = messageTexte;
+                msg.className = 'alert alert-success';
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 4000);
+            }
+        }
+
+        function importerDonneesJSON(inputEl) {
+            const el = inputEl || document.getElementById('jsonInput');
+            chargerFichierJSON(el, 'simple', 'msg-sauvegarde');
         }
 
         function reinitialiserApp() {
@@ -1918,7 +1994,7 @@
             settingsEquipe.pointsDefaite = parseInt(document.getElementById('set-defaite-equipe').value) || 5;
             settingsEquipe.pointsArbitre = parseInt(document.getElementById('set-arbitre-equipe').value) || 2;
             settingsEquipe.bonusClassement = document.getElementById('set-bonus-equipe').checked;
-            localStorage.setItem('badm_settings_equipe', JSON.stringify(settingsEquipe));
+            saveAllToLocalStorage(true);
 
             const msg = document.getElementById('msg-settings-equipe');
             msg.style.display = 'block';
@@ -1988,9 +2064,7 @@
         }
 
         function saveEquipe() {
-            localStorage.setItem('badm_equipes', JSON.stringify(equipes));
-            localStorage.setItem('badm_matchs_equipe', JSON.stringify(allMatchesEquipe));
-            showAutoSave();
+            saveAllToLocalStorage(true);
         }
 
         function renderListeEquipes() {
@@ -2292,25 +2366,7 @@
         }
 
         function telechargerDonneesEquipe() {
-            const exportData = {
-                version: "2.0-equipe",
-                date: new Date().toISOString(),
-                equipes: equipes,
-                allMatchesEquipe: allMatchesEquipe,
-                settingsEquipe: settingsEquipe
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "tournoi_badminton_equipes_sauvegarde.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-
-            const msg = document.getElementById('msg-sauvegarde-equipe');
-            msg.className = 'alert alert-info';
-            msg.style.display = 'block';
-            setTimeout(() => msg.style.display = 'none', 3000);
+            exporterFichierJSON("tournoi_badminton_equipes_sauvegarde", "msg-sauvegarde-equipe");
         }
 
         function exporterClassementExcelEquipe() {
@@ -2342,42 +2398,9 @@
             document.body.removeChild(link);
         }
 
-        function importerDonneesJSONEquipe() {
-            const file = document.getElementById('jsonInputEquipe').files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-
-                    if (Array.isArray(data)) {
-                        openModal("📥 Importer Équipes", "Liste d'équipes détectée. Voulez-vous importer ?", "Importer", () => {
-                            equipes = data;
-                            saveEquipe();
-                            alert("✅ Équipes importées avec succès !");
-                            location.reload();
-                        });
-                    } else if (data && data.equipes) {
-                        openModal("📥 Importer Données Équipes", "Attention : Vous allez écraser TOUTES les données du tournoi équipe (équipes, matchs, réglages). Confirmer ?", "Tout importer", () => {
-                            equipes = data.equipes || [];
-                            allMatchesEquipe = data.allMatchesEquipe || data.allMatches || [];
-                            if (data.settingsEquipe || data.settings) {
-                                settingsEquipe = data.settingsEquipe || data.settings;
-                                localStorage.setItem('badm_settings_equipe', JSON.stringify(settingsEquipe));
-                            }
-                            saveEquipe();
-                            alert("✅ Toutes les données d'équipes ont été importées avec succès !");
-                            location.reload();
-                        });
-                    } else {
-                        alert("⛔ Erreur : Le fichier ne semble pas être un export valide du tournoi équipe.");
-                    }
-                } catch (err) {
-                    alert("⛔ Erreur de lecture du fichier JSON : " + err);
-                }
-            };
-            reader.readAsText(file);
+        function importerDonneesJSONEquipe(inputEl) {
+            const el = inputEl || document.getElementById('jsonInputEquipe');
+            chargerFichierJSON(el, 'equipe', 'msg-sauvegarde-equipe');
         }
 
         function reinitialiserAppEquipe() {
